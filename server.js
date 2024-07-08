@@ -15,6 +15,21 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
 
+// Define a schema for schedules
+const scheduleSchema = new mongoose.Schema({
+    schedule: {
+        type: Array,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+// Create a model for schedules
+const Schedule = mongoose.model('Schedule', scheduleSchema);
+
 // Routes
 app.get('/', (req, res) => {
     res.send('Hello, this is the Time Management App backend!');
@@ -32,6 +47,25 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body;
     // Implement user login logic here
     res.json({ message: 'User logged in successfully!' });
+});
+
+// Save schedule route
+app.post('/save-schedule', (req, res) => {
+    const newSchedule = new Schedule({
+        schedule: req.body.schedule
+    });
+
+    newSchedule.save()
+        .then(schedule => res.json({ success: true, schedule }))
+        .catch(err => res.status(400).json({ success: false, error: err.message }));
+});
+
+// Get saved schedules route
+app.get('/schedules', (req, res) => {
+    Schedule.find()
+        .sort({ createdAt: -1 }) // Sort by newest first
+        .then(schedules => res.json(schedules))
+        .catch(err => res.status(400).json({ success: false, error: err.message }));
 });
 
 // Start server
